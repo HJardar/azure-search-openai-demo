@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import time
 from abc import ABC, abstractmethod
 from typing import Any, AsyncGenerator, Optional, Union
 
@@ -10,7 +11,7 @@ from openai.types.chat import (
     ChatCompletionMessageParam,
 )
 
-from approaches.approach import Approach
+from approaches.approach import Approach, ThoughtStep
 from core.messagebuilder import MessageBuilder
 
 
@@ -21,10 +22,10 @@ class ChatApproach(Approach, ABC):
     ASSISTANT = "assistant"
 
     query_prompt_few_shots = [
-        {"role": USER, "content": "How did crypto do last year?"},
-        {"role": ASSISTANT, "content": "Summarize Cryptocurrency Market Dynamics from last year"},
-        {"role": USER, "content": "What are my health plans?"},
-        {"role": ASSISTANT, "content": "Show available health plans"},
+        {"role": USER, "content": "What are the responsibilities of a maintainance superintendent"},
+        {"role": ASSISTANT, "content": "Summarize responsibilites of a maintainance superintendent"},
+        {"role": USER, "content": "How do I evaluate the priority level of an anomaly?"},
+        {"role": ASSISTANT, "content": "Summarize procedure for evaluating an anomaly"},
     ]
     NO_RESPONSE = "0"
 
@@ -85,6 +86,21 @@ class ChatApproach(Approach, ABC):
             if query_text.strip() != self.NO_RESPONSE:
                 return query_text
         return user_query
+    
+    def get_TimeTokens_no_stream(self, context: any, usage: any):
+        thoughts = context["thoughts"]
+        thought: ThoughtStep
+        for thought in thoughts:
+            if thought.title == "Time and Tokencost" and isinstance(float(thought.description), float):
+                responseTime = round(time.time() - float(thought.description), 3)
+                thought.description = ""
+                thought.props = {
+                    "Time": f"{responseTime} seconds.", 
+                    "Tokencost": f'{usage["total_tokens"]}. ({usage["prompt_tokens"]} prompt + {usage["completion_tokens"]} completion tokens)'
+                    }
+        context["thoughts"] = thoughts
+        
+        return context
 
     def extract_followup_questions(self, content: str):
         return content.split("<<")[0], re.findall(r"<<([^>>]+)>>", content)
@@ -131,6 +147,7 @@ class ChatApproach(Approach, ABC):
         )
         chat_completion_response: ChatCompletion = await chat_coroutine
         chat_resp = chat_completion_response.model_dump()  # Convert to dict to make it JSON serializable
+        extra_info = self.get_TimeTokens_no_stream(extra_info, chat_resp["usage"])
         chat_resp["choices"][0]["context"] = extra_info
         if overrides.get("suggest_followup_questions"):
             content, followup_questions = self.extract_followup_questions(chat_resp["choices"][0]["message"]["content"])

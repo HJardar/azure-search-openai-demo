@@ -3,9 +3,13 @@ import { Example } from "./Example";
 import styles from "./Example.module.css";
 
 const DEFAULT_EXAMPLES: string[] = [
-    "What is included in my Northwind Health Plus plan that is not in standard?",
-    "What happens in a performance review?",
-    "What does a Product Manager do?"
+    "What categories of anomalies are there?",
+    "Hvem er ansvarlig for håndtering av en endringsordre (VO)?",
+    "What are the responsibilities of an SRO?",
+    "Oppsummer prosedyren for dokumenthåndtering.",
+    "Resuma o procedimento de gerenciamento de documentos.",
+    "Résumez la procédure de gestion des documents.",
+    "Fassen Sie das Verfahren zur Dokumentenverwaltung zusammen."
 ];
 
 const GPT4V_EXAMPLES: string[] = [
