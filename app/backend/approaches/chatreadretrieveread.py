@@ -1,5 +1,5 @@
 import time
-from typing import Any, Coroutine, Literal, Optional, Union, overload
+from typing import Any, Coroutine, List, Literal, Optional, Union, overload
 
 from azure.search.documents.aio import SearchClient
 from azure.search.documents.models import VectorQuery
@@ -7,6 +7,7 @@ from openai import AsyncOpenAI, AsyncStream
 from openai.types.chat import (
     ChatCompletion,
     ChatCompletionChunk,
+    ChatCompletionToolParam,
 )
 
 from approaches.approach import ThoughtStep
@@ -99,19 +100,22 @@ Each source has a name followed by colon and the actual information, always incl
         original_user_query = history[-1]["content"]
         user_query_request = "Generate search query for: " + original_user_query
 
-        functions = [
+        tools: List[ChatCompletionToolParam] = [
             {
-                "name": "search_sources",
-                "description": "Retrieve sources from the Azure AI Search index",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "search_query": {
-                            "type": "string",
-                            "description": "Query string to retrieve documents from azure search eg: 'Health care plan'",
-                        }
+                "type": "function",
+                "function": {
+                    "name": "search_sources",
+                    "description": "Retrieve sources from the Azure AI Search index",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "search_query": {
+                                "type": "string",
+                                "description": "Query string to retrieve documents from azure search eg: 'Health care plan'",
+                            }
+                        },
+                        "required": ["search_query"],
                     },
-                    "required": ["search_query"],
                 },
             }
         ]
@@ -133,8 +137,8 @@ Each source has a name followed by colon and the actual information, always incl
             temperature=0.0,
             max_tokens=100,  # Setting too low risks malformed JSON, setting too high may affect performance
             n=1,
-            functions=functions,
-            function_call="auto",
+            tools=tools,
+            tool_choice="auto",
         )
 
         query_text = self.get_search_query(chat_completion, original_user_query)
