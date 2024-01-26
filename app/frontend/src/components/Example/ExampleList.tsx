@@ -8,8 +8,7 @@ const DEFAULT_EXAMPLES: string[] = [
     "What are the responsibilities of an SRO?",
     "Oppsummer prosedyren for dokumenthåndtering.",
     "Resuma o procedimento de gerenciamento de documentos.",
-    "Résumez la procédure de gestion des documents.",
-    "Fassen Sie das Verfahren zur Dokumentenverwaltung zusammen."
+    "Résumez la procédure de gestion des documents."
 ];
 
 const GPT4V_EXAMPLES: string[] = [
