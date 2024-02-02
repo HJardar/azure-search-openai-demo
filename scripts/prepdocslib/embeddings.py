@@ -197,7 +197,7 @@ class ImageEmbeddings:
 
     async def create_embeddings(self, blob_urls: List[str]) -> List[List[float]]:
         headers = {"Ocp-Apim-Subscription-Key": self.credential}
-        params = {"api-version": "2023-02-01-preview", "modelVersion": "latest"}
+        params = {"api-version": "2023-12-01-preview", "modelVersion": "latest"}
         endpoint = urljoin(self.endpoint, "computervision/retrieval:vectorizeImage")
         embeddings: List[List[float]] = []
         async with aiohttp.ClientSession(headers=headers) as session:
