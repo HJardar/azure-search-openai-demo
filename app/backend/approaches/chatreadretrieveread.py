@@ -1,3 +1,4 @@
+import time
 from typing import Any, Coroutine, List, Literal, Optional, Union, overload
 
 from azure.search.documents.aio import SearchClient
@@ -52,10 +53,10 @@ class ChatReadRetrieveReadApproach(ChatApproach):
 
     @property
     def system_message_chat_conversation(self):
-        return """Assistant helps the company employees with their healthcare plan questions, and questions about the employee handbook. Be brief in your answers.
-        Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
-        For tabular information return it as an html table. Do not return markdown format. If the question is not in English, answer in the language used in the question.
-        Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brackets to reference the source, for example [info1.txt]. Don't combine sources, list each source separately, for example [info1.txt][info2.pdf].
+        return """You are an assistant that helps the Altera company employees with questions about internal company procedure documents. Be brief in your answers.
+Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
+For tabular information return it as an html table. Do not return markdown format. If the question is not in English, answer in the language used in the question.
+Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brackets to reference the source, for example [FPSO-AP-AP102-ALL]. Don't combine sources, list each source separately, for example [FPSO-AP-AP102-ALL][FPSO-AP-AP817-ALL].
         {follow_up_questions_prompt}
         {injected_prompt}
         """
@@ -85,6 +86,7 @@ class ChatReadRetrieveReadApproach(ChatApproach):
         auth_claims: dict[str, Any],
         should_stream: bool = False,
     ) -> tuple[dict[str, Any], Coroutine[Any, Any, Union[ChatCompletion, AsyncStream[ChatCompletionChunk]]]]:
+        timeStamp = str(round(time.time(), 3))
         has_text = overrides.get("retrieval_mode") in ["text", "hybrid", None]
         has_vector = overrides.get("retrieval_mode") in ["vectors", "hybrid", None]
         use_semantic_captions = True if overrides.get("semantic_captions") and has_text else False
@@ -174,7 +176,6 @@ class ChatReadRetrieveReadApproach(ChatApproach):
         )
 
         data_points = {"text": sources_content}
-
         extra_info = {
             "data_points": data_points,
             "thoughts": [
@@ -189,6 +190,7 @@ class ChatReadRetrieveReadApproach(ChatApproach):
                 ),
                 ThoughtStep("Results", [result.serialize_for_results() for result in results]),
                 ThoughtStep("Prompt", [str(message) for message in messages]),
+                ThoughtStep("Time and Tokencost", timeStamp),
             ],
         }
 

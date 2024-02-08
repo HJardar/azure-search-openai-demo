@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { Checkbox, Panel, DefaultButton, TextField, SpinButton, Slider } from "@fluentui/react";
-import { SparkleFilled } from "@fluentui/react-icons";
-import readNDJSONStream from "ndjson-readablestream";
+import alteraLogo from "../../assets/altera_logo_primary.png";
+//import sourceListFile from "../../assets/sourceList.txt";
+//import fs from "fs";import readNDJSONStream from "ndjson-readablestream";
 
 import styles from "./Chat.module.css";
 
@@ -13,6 +14,7 @@ import {
     ChatAppResponseOrError,
     ChatAppRequest,
     ResponseMessage,
+    Thoughts,
     VectorFieldOptions,
     GPT4VInput
 } from "../../api";
@@ -22,6 +24,7 @@ import { ExampleList } from "../../components/Example";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel";
 import { SettingsButton } from "../../components/SettingsButton";
+import { SourceListButton } from "../../components/SourceListButton";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { useLogin, getToken, isLoggedIn, requireAccessControl } from "../../authConfig";
 import { VectorSettings } from "../../components/VectorSettings";
@@ -31,6 +34,7 @@ import { GPT4VSettings } from "../../components/GPT4VSettings";
 
 const Chat = () => {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
+    const [isSourcePanelOpen, setIsSourcePanelOpen] = useState(false);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
     const [temperature, setTemperature] = useState<number>(0.3);
     const [retrieveCount, setRetrieveCount] = useState<number>(3);
@@ -113,6 +117,19 @@ const Chat = () => {
         } finally {
             setIsStreaming(false);
         }
+        let thoughts = askResponse["choices"][0]["context"]["thoughts"];
+        for (const thought of thoughts) {
+            if (thought.title === "Time and Tokencost") {
+                let responseTime = String((Number(new Date().getTime()) - Number(thought.description) * 1000) / 1000) + " seconds";
+                thought.description = "";
+                thought.props = {
+                    Time: responseTime,
+                    TokenCost: "Tokencost currently unavailable in streaming-mode"
+                };
+                askResponse["choices"][0]["context"]["thoughts"] = thoughts;
+            }
+        }
+
         const fullResponse: ChatAppResponse = {
             ...askResponse,
             choices: [{ ...askResponse.choices[0], message: { content: answer, role: askResponse.choices[0].message.role } }]
@@ -193,6 +210,24 @@ const Chat = () => {
         setIsLoading(false);
         setIsStreaming(false);
     };
+    const sourceList: string[] = (() => {
+        try {
+            //const data: string = fs.readFileSync("../../assets/sourceList.txt", "utf-8");
+            //const sources: string[] = data.split("\n").map(str => str.trim());
+            const sources: string[] = [
+                "FPSO-AP-AP102-ALL.pdf",
+                "FPSO-AP-AP105-ALL.pdf",
+                "FPSO-AP-AP601-ALL.pdf",
+                "FPSO-AP-AP701-ALL.pdf",
+                "FPSO-AP-AP813-ALL.pdf",
+                "FPSO-AP-AP817-ALL.pdf"
+            ];
+
+            return sources;
+        } catch (error) {
+            return ["An error has occured: " + error];
+        }
+    })();
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "auto" }), [streamedAnswers]);
@@ -273,14 +308,16 @@ const Chat = () => {
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+                <SourceListButton className={styles.commandButton} onClick={() => void setIsSourcePanelOpen(!isSourcePanelOpen)} />
                 <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState}>
-                            <SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 225, 1)"} aria-hidden="true" aria-label="Chat logo" />
-                            <h1 className={styles.chatEmptyStateTitle}>Chat with your data</h1>
+                            <h1 className={styles.chatEmptyStateTitle}>
+                                Chat with <img src={alteraLogo} height="170px" width="170px"></img> procedures
+                            </h1>
                             <h2 className={styles.chatEmptyStateSubtitle}>Ask anything or try an example</h2>
                             <ExampleList onExampleClicked={onExampleClicked} useGPT4V={useGPT4V} />
                         </div>
@@ -347,7 +384,7 @@ const Chat = () => {
                     <div className={styles.chatInput}>
                         <QuestionInput
                             clearOnSend
-                            placeholder="Type a new question (e.g. does my plan cover annual eye exams?)"
+                            placeholder="Type a new question (e.g. What is PIMS?)"
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                         />
@@ -472,6 +509,23 @@ const Chat = () => {
                         onChange={onShouldStreamChange}
                     />
                     {useLogin && <TokenClaimsDisplay />}
+                </Panel>
+                <Panel
+                    headerText="Sources:"
+                    isOpen={isSourcePanelOpen}
+                    isBlocking={false}
+                    onDismiss={() => setIsSourcePanelOpen(false)}
+                    closeButtonAriaLabel="Close"
+                    onRenderFooterContent={() => <DefaultButton onClick={() => setIsSourcePanelOpen(false)}>Close</DefaultButton>}
+                    isFooterAtBottom={true}
+                >
+                    <ul>
+                        {sourceList.map((fileName, i) => (
+                            <li key={i}>
+                                <p>{fileName}</p>
+                            </li>
+                        ))}
+                    </ul>
                 </Panel>
             </div>
         </div>

@@ -190,7 +190,7 @@ class Approach:
 
     async def compute_image_embedding(self, q: str, vision_endpoint: str, vision_key: str):
         endpoint = f"{vision_endpoint}computervision/retrieval:vectorizeText"
-        params = {"api-version": "2023-02-01-preview", "modelVersion": "latest"}
+        params = {"api-version": "2023-12-01-preview", "modelVersion": "latest"}
         headers = {"Content-Type": "application/json", "Ocp-Apim-Subscription-Key": vision_key}
         data = {"text": q}
 
