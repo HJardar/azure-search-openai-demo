@@ -98,7 +98,7 @@ FPSO-AP-AP601-ALL.pdf: A proposed temporary or permanent design change to produc
 
         user_content = [q]
 
-        template = overrides.get("prompt_template") or self.system_chat_template
+        template = overrides.get("prompt_template", self.system_chat_template)
         model = self.chatgpt_model
         message_builder = MessageBuilder(template, model)
 
@@ -117,7 +117,7 @@ FPSO-AP-AP601-ALL.pdf: A proposed temporary or permanent design change to produc
                 # Azure Open AI takes the deployment name as the model name
                 model=self.chatgpt_deployment if self.chatgpt_deployment else self.chatgpt_model,
                 messages=message_builder.messages,
-                temperature=overrides.get("temperature") or 0.3,
+                temperature=overrides.get("temperature", 0.3),
                 max_tokens=1024,
                 n=1,
             )
