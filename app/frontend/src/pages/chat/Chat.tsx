@@ -2,7 +2,8 @@ import { useRef, useState, useEffect } from "react";
 import { Checkbox, Panel, DefaultButton, TextField, SpinButton, Slider } from "@fluentui/react";
 import alteraLogo from "../../assets/altera_logo_primary.png";
 //import sourceListFile from "../../assets/sourceList.txt";
-//import fs from "fs";import readNDJSONStream from "ndjson-readablestream";
+//import fs from "fs";
+import readNDJSONStream from "ndjson-readablestream";
 
 import styles from "./Chat.module.css";
 
