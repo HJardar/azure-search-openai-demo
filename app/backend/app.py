@@ -96,12 +96,10 @@ async def content_file(path: str):
     """
     # Remove page number from path, filename-1.txt -> filename.txt    
     #if path.find("#page=") > 0:
-    path.replace('_', '-')
-    foldername = path.split('-', 1)
+    foldername = path.replace('_', '-').split('-', 1)
     filename = path.rsplit("#page=", 1)
     filepath = f'{foldername[0]}/{filename[0]}'
     logging.info("Opening file %s at page %s", filepath)
-    print("AAAAAAAAAAAAAAAA" + filepath)
     blob_container_client = current_app.config[CONFIG_BLOB_CONTAINER_CLIENT]
     try:
         blob = await blob_container_client.get_blob_client(filepath).download_blob()
