@@ -4,6 +4,7 @@ import json
 import logging
 import mimetypes
 import os
+import sys
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict, Union, cast
 
@@ -93,14 +94,17 @@ async def content_file(path: str):
     if AZURE_ENFORCE_ACCESS_CONTROL is set to true, logged in users can only access files they have access to
     This is also slow and memory hungry.
     """
-    # Remove page number from path, filename-1.txt -> filename.txt
-    if path.find("#page=") > 0:
-        path_parts = path.rsplit("#page=", 1)
-        path = path_parts[0]
-    logging.info("Opening file %s at page %s", path)
+    # Remove page number from path, filename-1.txt -> filename.txt    
+    #if path.find("#page=") > 0:
+    path.replace('_', '-')
+    foldername = path.split('-', 1)
+    filename = path.rsplit("#page=", 1)
+    filepath = f'{foldername[0]}/{filename[0]}'
+    logging.info("Opening file %s at page %s", filepath)
+    print("AAAAAAAAAAAAAAAA" + filepath)
     blob_container_client = current_app.config[CONFIG_BLOB_CONTAINER_CLIENT]
     try:
-        blob = await blob_container_client.get_blob_client(path).download_blob()
+        blob = await blob_container_client.get_blob_client(filepath).download_blob()
     except ResourceNotFoundError:
         logging.exception("Path not found: %s", path)
         abort(404)

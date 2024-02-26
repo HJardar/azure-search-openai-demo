@@ -74,12 +74,7 @@ class FileStrategy(Strategy):
                         Section(split_page, content=file, category=self.category)
                         for split_page in processor.splitter.split_pages(pages)
                     ]
-
-                    blob_sas_uris = await self.blob_manager.upload_blob(file)
-                    blob_image_embeddings: Optional[List[List[float]]] = None
-                    if self.image_embeddings and blob_sas_uris:
-                        blob_image_embeddings = await self.image_embeddings.create_embeddings(blob_sas_uris)
-                    await search_manager.update_content(sections, blob_image_embeddings)
+                    await search_manager.update_content(sections)
                 finally:
                     if file:
                         file.close()
